@@ -243,6 +243,7 @@ async function begin() {
     kingdoms: Number(el<HTMLInputElement>("opt-kingdoms").value),
     clans: Number(el<HTMLInputElement>("opt-clans").value),
     sandbox: el<HTMLInputElement>("opt-sandbox").checked,
+    rules: readRules(),
     cosmetic: account.state ? { equipped: account.state.equipped, skin: account.skin } : undefined,
   };
   el("loading").hidden = false;
@@ -290,7 +291,6 @@ function openMenu(mode: "solo" | "host") {
       : "Choose the realm, then share the code or link with your friends.";
   el("opt-sandbox-row").hidden = mode === "host";
   el("opt-players-row").hidden = mode === "solo";
-  el("opt-rules").hidden = mode === "solo";
   el("opt-start").textContent = mode === "solo" ? "Enter the realm" : "Open the lobby";
   el("opt-error").hidden = true;
   el("menu").hidden = false;

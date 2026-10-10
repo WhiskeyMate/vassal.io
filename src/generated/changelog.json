@@ -1,8 +1,13 @@
 {
-  "version": "0.1.100",
+  "version": "0.1.101",
   "builtAt": "2026-10-10",
-  "commits": 100,
+  "commits": 101,
   "entries": [
+    {
+      "hash": "6f0ceae",
+      "date": "2026-10-10",
+      "subject": "A small note asks players whose browser blocks the advertising to turn the blocker off"
+    },
     {
       "hash": "c7fcfbf",
       "date": "2026-10-10",

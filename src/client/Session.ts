@@ -23,6 +23,7 @@ import {
   MainThreadMessage,
   WorkerMessage,
 } from "@crusades/engine-api/worker/WorkerMessages";
+import type { Rules } from "../net/Protocol";
 import { SocketTransport } from "../net/SocketTransport";
 import { LocalTransport, Transport } from "../net/Transport";
 import { loadRealm, Realm } from "../worldgen/RealmGen";
@@ -37,6 +38,8 @@ export interface SessionOptions {
   kingdoms: number;
   /** Endless gold and instant building, for trying things out. */
   sandbox: boolean;
+  /** House rules, as a private lobby has them. */
+  rules?: Rules;
   /** No human player: just watch the AI realms fight. */
   spectate?: boolean;
   /** What the player wears (from their account). */
@@ -72,14 +75,15 @@ export async function soloSession(options: SessionOptions): Promise<Session> {
     seed: options.seed,
     kingdoms: options.kingdoms,
   });
+  const rules = options.rules ?? {};
   const info: GameStartInfo = {
     gameID: randomID(),
     lobbyCreatedAt: 0,
     config: {
       gameMap: options.map,
       difficulty: options.difficulty,
-      donateGold: true,
-      donateTroops: true,
+      donateGold: !rules.noGoldGifts,
+      donateTroops: !rules.noLevyGifts,
       // A solo game starts when the player picks a seat. With nobody to
       // pick one, use the timed opening the engine gives shared games.
       gameType: options.spectate ? GameType.Private : GameType.Singleplayer,
@@ -87,10 +91,18 @@ export async function soloSession(options: SessionOptions): Promise<Session> {
       gameMapSize: GameMapSize.Normal,
       nations: options.kingdoms > 0 ? "default" : "disabled",
       bots: options.clans,
-      infiniteGold: options.sandbox,
-      infiniteTroops: false,
-      instantBuild: options.sandbox,
+      infiniteGold: options.sandbox || (rules.infiniteGold ?? false),
+      infiniteTroops: rules.infiniteTroops ?? false,
+      instantBuild: options.sandbox || (rules.instantBuild ?? false),
       randomSpawn: false,
+      // The same reading of the rules as the game server gives a private lobby.
+      ...(rules.noPacts ? { disableAlliances: true } : {}),
+      ...(rules.startingGold ? { startingGold: rules.startingGold } : {}),
+      ...(rules.goldMultiplier && rules.goldMultiplier !== 1 ? { goldMultiplier: rules.goldMultiplier } : {}),
+      ...(rules.truceSeconds ? { spawnImmunityDuration: rules.truceSeconds * 10 } : {}),
+      ...(rules.limitMinutes ? { maxTimerValue: rules.limitMinutes } : {}),
+      ...(rules.pactMinutes ? { customAllianceDuration: rules.pactMinutes } : {}),
+      ...(rules.banned && rules.banned.length > 0 ? { disabledUnits: rules.banned } : {}),
     },
     players: options.spectate
       ? []
